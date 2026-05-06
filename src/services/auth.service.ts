@@ -8,7 +8,9 @@ import {
 } from "../interfaces";
 
 import {prisma} from "../lib/db";
-import {BadRequestError, CustomErrorCode} from "../exceptions";
+import {BadRequestError, CustomErrorCode, NotFoundError, UnAuthorizedError} from "../exceptions";
+import bcrypt from "bcryptjs";
+import {generateAccessToken, generateRefreshToken} from "../helpers";
 
 // Souce of Truth -> Database
 
@@ -19,29 +21,45 @@ class AuthService {
     }
 
     public static async signup(input: SignupDTO): Promise<IService> {
+        const {email, password, firstName, lastName, deviceId} = input;
 
-        const {email} = input;
-        const existingUser = await prisma.users.findUnique({
-            where: {
-                email
-            }
-        });
-
+        const existingUser = await prisma.users.findUnique({where: {email}});
         if (existingUser) {
             throw new BadRequestError({
                 msg: "Account with the email already exists",
                 errorCode: CustomErrorCode.DUPLICATE_RESOURCE
             });
         }
-        // internals of this is that, const allocate a fixed memory space in the heap for the object we aare assigning it to.
 
-        // let and var are different from const in that, they can be re-assigned to a different value or object, while const cannot be re-assigned. However, the properties of an object assigned to a const variable can still be modified.
+        const passwordHash = await bcrypt.hash(password, 12);
+
+        // TODO: phone and company fields need to be added to the Users model in schema.prisma
+        const user = await prisma.users.create({
+            data: {email, firstName, lastName},
+        });
+
+        await prisma.userAuths.create({
+            data: {userId: user.id, passwordHash},
+        });
+
+        const tokenPayload = {userId: user.id, email: user.email, deviceId};
+        const accessToken = generateAccessToken(tokenPayload);
+        const refreshToken = generateRefreshToken(tokenPayload);
+
+        // First device is auto-recognized on signup
+        await prisma.userTokens.create({
+            data: {userId: user.id, deviceId, accessToken, refreshToken},
+        });
 
         return {
             success: true,
             message: "Signup successful",
-            data: {}
-        }
+            data: {
+                accessToken,
+                refreshToken,
+                user: {id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName},
+            },
+        };
     }
 
     public static async login(input: LoginDTO): Promise<IService> {
