@@ -10,7 +10,7 @@ import {
 import {prisma} from "../lib/db";
 import {BadRequestError, CustomErrorCode} from "../exceptions";
 
-// Souce of Truth -> Database
+// Source of Truth -> Database
 
 class AuthService {
 
@@ -98,6 +98,9 @@ class AuthService {
         return {
             success: true,
             message: "Password reset link sent to your email",
+            data:{
+                confirmationToken:"" // a jwt token that will used an header to verify the reset is coming from our server initiated request
+            }
         }
     }
 
