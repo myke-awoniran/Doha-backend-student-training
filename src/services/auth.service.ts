@@ -10,7 +10,7 @@ import {
 import {prisma} from "../lib/db";
 import {BadRequestError, CustomErrorCode, NotFoundError, UnAuthorizedError} from "../exceptions";
 import bcrypt from "bcryptjs";
-import {generateAccessToken, generateRefreshToken} from "../helpers";
+import {generateJwtToken, TOKEN_TYPE} from "../helpers";
 
 // Souce of Truth -> Database
 
@@ -42,9 +42,8 @@ class AuthService {
             data: {userId: user.id, passwordHash},
         });
 
-        const tokenPayload = {userId: user.id, email: user.email, deviceId};
-        const accessToken = generateAccessToken(tokenPayload);
-        const refreshToken = generateRefreshToken(tokenPayload);
+        const accessToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.AUTH_TOKEN});
+        const refreshToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.REFRESH_TOKEN});
 
         // First device is auto-recognized on signup
         await prisma.userTokens.create({
@@ -110,9 +109,8 @@ class AuthService {
         }
 
         // 4. Device recognized — issue fresh tokens
-        const tokenPayload = {userId: user.id, email: user.email, deviceId};
-        const accessToken = generateAccessToken(tokenPayload);
-        const refreshToken = generateRefreshToken(tokenPayload);
+        const accessToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.AUTH_TOKEN});
+        const refreshToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.REFRESH_TOKEN});
 
         await prisma.userTokens.update({
             where: {id: recognizedToken.id},
