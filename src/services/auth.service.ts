@@ -20,7 +20,7 @@ class AuthService {
     }
 
     public static async signup(input: SignupDTO): Promise<IService> {
-        const {email, password, firstName, lastName, deviceId} = input;
+        const {email, password, firstName, lastName, phone, company, deviceId} = input;
 
         const existingUser = await prisma.users.findUnique({where: {email}});
         if (existingUser) {
@@ -32,9 +32,8 @@ class AuthService {
 
         const passwordHash = await hashPassword(password);
 
-        // TODO: phone and company fields need to be added to the Users model in schema.prisma
         const user = await prisma.users.create({
-            data: {email, firstName, lastName},
+            data: {email, firstName, lastName, phone, company},
         });
 
         await prisma.userAuths.create({
