@@ -85,7 +85,7 @@ class AuthService {
             });
         }
 
-        // 3. Check if device is recognized
+        // find user tokens — check if the user deviceId is part of the recognised devices
         const recognizedToken = await prisma.userTokens.findFirst({
             where: {userId: user.id, deviceId},
         });
@@ -122,7 +122,7 @@ class AuthService {
             data: {
                 accessToken,
                 refreshToken,
-                user: {id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName},
+                user: (({UserAuths: _, ...u}) => u)(user),
             },
         };
     }
