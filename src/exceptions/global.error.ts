@@ -65,6 +65,7 @@ export function createApiErrorResponse(
         environment = config.environment,
         apiVersion = "1.0.0",
         reason,
+        data,
     } = options;
     return {
         success: false,

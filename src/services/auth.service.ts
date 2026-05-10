@@ -37,7 +37,7 @@ class AuthService {
         });
 
         await prisma.userAuths.create({
-            data: {userId: user.id, passwordHash},
+            data: {userId: user.id, passwordHash, recognisedDevices: [deviceId]},
         });
 
         const accessToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.AUTH_TOKEN});
