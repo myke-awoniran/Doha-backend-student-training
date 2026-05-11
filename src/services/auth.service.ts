@@ -99,26 +99,16 @@ class AuthService {
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
             const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-            // Confirmation token the verifyDeviceChange endpoint uses as its auth header
-            const confirmationToken = generateJwtToken({
-                userId: user.id,
-                email: user.email,
-                deviceId,
-                tokenType: TOKEN_TYPE.RESET_TOKEN,
-            });
-
             await prisma.userVerifications.create({
                 data: {userId: user.id, token: otp, deviceId, expiresAt},
             });
 
             // TODO: send OTP to user.email via email service
 
-            const error = new UnAuthorizedError({
+            throw new UnAuthorizedError({
                 msg: "Unrecognised device. A verification code has been sent to your email.",
                 errorCode: CustomErrorCode.AUTH_BLOCKED,
             });
-            error.data = {confirmationToken};
-            throw error;
         }
 
         // 5. Device recognised — issue fresh tokens
