@@ -32,20 +32,23 @@ class AuthService {
 
         const passwordHash = await hashPassword(password);
 
-        const user = await prisma.users.create({
-            data: {email, firstName, lastName, phone, company},
-        });
+        const {user, accessToken, refreshToken} = await prisma.$transaction(async (tx) => {
+            const user = await tx.users.create({
+                data: {email, firstName, lastName, phone, company},
+            });
 
-        await prisma.userAuths.create({
-            data: {userId: user.id, passwordHash, recognisedDevices: [deviceId]},
-        });
+            await tx.userAuths.create({
+                data: {userId: user.id, passwordHash, recognisedDevices: [deviceId]},
+            });
 
-        const accessToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.AUTH_TOKEN});
-        const refreshToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.REFRESH_TOKEN});
+            const accessToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.AUTH_TOKEN});
+            const refreshToken = generateJwtToken({userId: user.id, email: user.email, deviceId, tokenType: TOKEN_TYPE.REFRESH_TOKEN});
 
-        // First device is auto-recognized on signup
-        await prisma.userTokens.create({
-            data: {userId: user.id, deviceId, accessToken, refreshToken},
+            await tx.userTokens.create({
+                data: {userId: user.id, deviceId, accessToken, refreshToken},
+            });
+
+            return {user, accessToken, refreshToken};
         });
 
         return {
