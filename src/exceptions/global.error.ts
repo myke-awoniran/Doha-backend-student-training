@@ -32,7 +32,6 @@ export interface ApiErrorResponse {
     retryable: boolean;
     suggestedAction?: string;
     reason?: unknown;
-    data?: Record<string, unknown>;
     environment?: string;
     apiVersion?: string;
 }
@@ -48,7 +47,6 @@ export interface ApiErrorOptions {
     environment?: string;
     apiVersion?: string;
     reason?: unknown;
-    data?: Record<string, unknown>;
 }
 
 export function createApiErrorResponse(
@@ -65,7 +63,6 @@ export function createApiErrorResponse(
         environment = config.environment,
         apiVersion = "1.0.0",
         reason,
-        data,
     } = options;
     return {
         success: false,
@@ -77,7 +74,6 @@ export function createApiErrorResponse(
         retryable,
         suggestedAction,
         reason,
-        data,
         environment,
         apiVersion,
     };
@@ -128,7 +124,6 @@ export async function fastifyErrorHandler(
                 errorCode: error.errorCode,
                 message: error.message,
                 fault: error.fault,
-                data: error.data,
             })
         );
     }
