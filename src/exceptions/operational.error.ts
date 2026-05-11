@@ -15,7 +15,6 @@ export class CustomError extends Error {
     fault: ErrorFaultType;
     isOperational: boolean;
     retryable: boolean;
-    data?: Record<string, unknown>;
 
     constructor({
                     message,
