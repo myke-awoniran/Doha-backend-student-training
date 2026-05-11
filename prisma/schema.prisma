@@ -22,7 +22,7 @@ model Users {
   company           String?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
-  UserAuths         UserAuths[]
+  userAuths         UserAuths?
   UserVerifications UserVerifications[]
   UserTokens        UserTokens[]
 }
